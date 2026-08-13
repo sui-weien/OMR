@@ -94,6 +94,25 @@ python detect_primitives.py \
   --output-dir primitive_output/score
 ```
 
+## Optional: OCR-assisted dynamic/expression text markings
+
+```bash
+python detect_text_markings.py \
+  /path/to/score.jpg \
+  --output-dir text_marking_output/score
+```
+
+Runs OCR (`python-doctr`, see `requirements_ocrt.txt` — a separate
+environment from the main pipeline, since it needs a newer `torch`) and
+tags only "dynamic_mark" (p, f, cresc., sf, ...) and "expression_mark"
+(dolce, sempre, poco, ...) words with reasonable confidence. This is
+conservative by design: validated against real ground truth, pedal
+markings and fingering numbers were not reliable enough to include (OCR
+misreads the pedal glyph outright, and mostly fails to even locate the
+tiny fingering digits), so this step does not attempt them. Output is a
+`{stem}_text_markings.json` per page; it is not yet merged into the
+MusicXML export.
+
 ## Outputs
 
 ```text

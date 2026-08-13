@@ -15,6 +15,7 @@ htmlcov/
 
 # Virtual environments
 .venv/
+.venv_ocr/
 venv/
 env/
 
@@ -27,6 +28,7 @@ env/
 primitive_output/
 musicxml_output/
 primitive_training_output/
+text_marking_output/
 **/.cache/
 *.npz
 *.npy
