@@ -1,0 +1,3 @@
+[submodule "25-omr"]
+	path = 25-omr
+	url = https://github.com/lattellie/25-omr.git

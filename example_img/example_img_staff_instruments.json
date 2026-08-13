@@ -1,0 +1,76 @@
+{
+  "filename": "example_img",
+  "n_staves": 12,
+  "init_instruments": [
+    [
+      "Flute"
+    ],
+    [
+      "Oboe"
+    ],
+    [
+      "Clarinet"
+    ],
+    [
+      "Bassoon"
+    ],
+    [
+      "Horn"
+    ],
+    [
+      "Trumpet"
+    ],
+    [
+      "Timpani"
+    ],
+    [
+      "Violin"
+    ],
+    [
+      "Violin"
+    ],
+    [],
+    [
+      "Cello"
+    ],
+    [
+      "Bass"
+    ]
+  ],
+  "final_instruments": [
+    [
+      "Flute"
+    ],
+    [
+      "Oboe"
+    ],
+    [
+      "Clarinet"
+    ],
+    [
+      "Bassoon"
+    ],
+    [
+      "Horn"
+    ],
+    [
+      "Trumpet"
+    ],
+    [
+      "Timpani"
+    ],
+    [
+      "Violin"
+    ],
+    [
+      "Violin"
+    ],
+    [],
+    [
+      "Cello"
+    ],
+    [
+      "Bass"
+    ]
+  ]
+}

@@ -1,0 +1,162 @@
+{
+  "pages": [
+    {
+      "image_index": 1,
+      "filename": "example_img.png",
+      "staves": [
+        {
+          "staff_id": 1,
+          "staff_group_id": 1,
+          "system_id": 1,
+          "ocr": "2 Flauti",
+          "instrument": [
+            "Flute"
+          ],
+          "tone": [],
+          "part": [
+            1,
+            2
+          ]
+        },
+        {
+          "staff_id": 2,
+          "staff_group_id": 1,
+          "system_id": 1,
+          "ocr": "2 Oboi",
+          "instrument": [
+            "Oboe"
+          ],
+          "tone": [],
+          "part": [
+            1,
+            2
+          ]
+        },
+        {
+          "staff_id": 3,
+          "staff_group_id": 1,
+          "system_id": 1,
+          "ocr": "2 Clarinetti in B",
+          "instrument": [
+            "Clarinet"
+          ],
+          "tone": [
+            "B flat"
+          ],
+          "part": [
+            1,
+            2
+          ]
+        },
+        {
+          "staff_id": 4,
+          "staff_group_id": 1,
+          "system_id": 1,
+          "ocr": "2 Fagotti",
+          "instrument": [
+            "Bassoon"
+          ],
+          "tone": [],
+          "part": [
+            1,
+            2
+          ]
+        },
+        {
+          "staff_id": 5,
+          "staff_group_id": 1,
+          "system_id": 1,
+          "ocr": "2 Corni in Es",
+          "instrument": [
+            "Horn"
+          ],
+          "tone": [
+            "E flat"
+          ],
+          "part": [
+            1,
+            2
+          ]
+        },
+        {
+          "staff_id": 6,
+          "staff_group_id": 1,
+          "system_id": 1,
+          "ocr": "2 Trombe in C",
+          "instrument": [
+            "Trumpet"
+          ],
+          "tone": [
+            "C"
+          ],
+          "part": [
+            1,
+            2
+          ]
+        },
+        {
+          "staff_id": 7,
+          "staff_group_id": 2,
+          "system_id": 1,
+          "ocr": "Timpani in C-G",
+          "instrument": [
+            "Timpani"
+          ],
+          "tone": [
+            "C",
+            "G"
+          ],
+          "part": []
+        },
+        {
+          "staff_id": 8,
+          "staff_group_id": 3,
+          "system_id": 1,
+          "ocr": "Violino I",
+          "instrument": [
+            "Violin"
+          ],
+          "tone": [],
+          "part": [
+            1
+          ]
+        },
+        {
+          "staff_id": 9,
+          "staff_group_id": 3,
+          "system_id": 1,
+          "ocr": "Violino II",
+          "instrument": [
+            "Violin"
+          ],
+          "tone": [],
+          "part": [
+            2
+          ]
+        },
+        {
+          "staff_id": 10,
+          "staff_group_id": 3,
+          "system_id": 1,
+          "ocr": "Violoncello",
+          "instrument": [
+            "Cello"
+          ],
+          "tone": [],
+          "part": []
+        },
+        {
+          "staff_id": 11,
+          "staff_group_id": 3,
+          "system_id": 1,
+          "ocr": "Contrabasso",
+          "instrument": [
+            "Bass"
+          ],
+          "tone": [],
+          "part": []
+        }
+      ]
+    }
+  ]
+}

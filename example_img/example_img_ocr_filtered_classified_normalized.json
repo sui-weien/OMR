@@ -1,0 +1,244 @@
+{
+  "tokens": [
+    {
+      "token": "Allegro",
+      "class_id": 4,
+      "Instrument": "",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "2",
+      "class_id": 1,
+      "Instrument": "",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": [
+        2
+      ]
+    },
+    {
+      "token": "Flauti",
+      "class_id": 0,
+      "Instrument": "Flute",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "2",
+      "class_id": 1,
+      "Instrument": "",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": [
+        2
+      ]
+    },
+    {
+      "token": "Oboi",
+      "class_id": 0,
+      "Instrument": "Oboe",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "zu",
+      "class_id": 4,
+      "Instrument": "",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "2",
+      "class_id": 1,
+      "Instrument": "",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": [
+        2
+      ]
+    },
+    {
+      "token": "Clarinetti",
+      "class_id": 0,
+      "Instrument": "Clarinet",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "in",
+      "class_id": 4,
+      "Instrument": "",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "B",
+      "class_id": 2,
+      "Instrument": "",
+      "Tone": "B flat",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "2",
+      "class_id": 1,
+      "Instrument": "",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": [
+        2
+      ]
+    },
+    {
+      "token": "Fagotti",
+      "class_id": 0,
+      "Instrument": "Bassoon",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "2",
+      "class_id": 1,
+      "Instrument": "",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": [
+        2
+      ]
+    },
+    {
+      "token": "Corni",
+      "class_id": 0,
+      "Instrument": "Horn",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "in",
+      "class_id": 4,
+      "Instrument": "",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "Es",
+      "class_id": 2,
+      "Instrument": "",
+      "Tone": "E flat",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "2",
+      "class_id": 1,
+      "Instrument": "",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": [
+        2
+      ]
+    },
+    {
+      "token": "Trombe",
+      "class_id": 0,
+      "Instrument": "Trumpet",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "inC",
+      "class_id": 2,
+      "Instrument": "",
+      "Tone": "C",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "Timpani",
+      "class_id": 0,
+      "Instrument": "Timpani",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "inC-G",
+      "class_id": 2,
+      "Instrument": "",
+      "Tone": "C-G",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "Violino",
+      "class_id": 0,
+      "Instrument": "Violin",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "I",
+      "class_id": 1,
+      "Instrument": "",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": [
+        1
+      ]
+    },
+    {
+      "token": "Violino",
+      "class_id": 0,
+      "Instrument": "Violin",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "II",
+      "class_id": 1,
+      "Instrument": "",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": [
+        2
+      ]
+    },
+    {
+      "token": "H",
+      "class_id": 4,
+      "Instrument": "",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "Violoncello",
+      "class_id": 0,
+      "Instrument": "Cello",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    },
+    {
+      "token": "Contrabasso",
+      "class_id": 0,
+      "Instrument": "Bass",
+      "Tone": "",
+      "Instruction": "",
+      "Parts": []
+    }
+  ]
+}

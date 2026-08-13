@@ -1,0 +1,66 @@
+# Merged environment (experimental)
+# Combines ocrt + stave + intern + omr10 into a single env.
+#
+# IMPORTANT — numpy conflict:
+#   omr10 was pinned to numpy==1.26.4 (numpy 1.x).
+#   All other envs use numpy 2.x.
+#   This file uses numpy 2.x; test step 2c carefully before relying on it.
+#   If the omr/ package breaks, fall back to the four separate environments.
+#
+# Create with:
+#   conda create -n omr_all python=3.11
+#   conda activate omr_all
+#   pip install -r requirements_merged.txt
+#
+# Then edit run_pipeline.sh and set all four PYTHON_* variables to:
+#   conda run --no-capture-output -n omr_all python
+
+# ── Deep learning core ──────────────────────────────────────────────────────
+torch>=2.9.0
+torchvision>=0.24.0
+torchaudio
+
+# ── Numerical / vision ──────────────────────────────────────────────────────
+numpy>=2.2.0          # NOTE: upgraded from omr10's 1.26.4 — test step 2c
+Pillow>=12.0.0
+opencv-python>=4.12.0
+scikit-image>=0.25.0
+scikit-learn>=1.7.0
+scipy>=1.15.0
+matplotlib>=3.10.0
+pandas>=2.3.0
+
+# ── OCR ─────────────────────────────────────────────────────────────────────
+python-doctr[torch]==1.0.0
+easyocr>=1.7.0
+pytesseract>=0.3.0
+onnx>=1.19.0
+langdetect>=1.0.9
+shapely>=2.1.0
+
+# ── YOLO / OMR ──────────────────────────────────────────────────────────────
+ultralytics>=8.4.0
+omrdatasettools>=1.4.0
+
+# ── Inference runtime ────────────────────────────────────────────────────────
+onnxruntime-gpu>=1.23.0   # covers CPU use too; swap for onnxruntime if no GPU
+
+# ── TensorFlow (intern steps only) ──────────────────────────────────────────
+tensorflow>=2.20.0
+
+# ── Transformers / model utilities ──────────────────────────────────────────
+transformers>=4.57.0
+timm>=1.0.0
+accelerate>=1.11.0
+einops>=0.8.0
+omegaconf>=2.3.0
+albumentations>=2.0.0
+
+# ── OpenAI API ──────────────────────────────────────────────────────────────
+openai>=2.14.0
+python-dotenv>=1.2.0
+
+# ── Utilities ───────────────────────────────────────────────────────────────
+tqdm>=4.67.0
+seaborn>=0.13.0
+loguru>=0.7.0

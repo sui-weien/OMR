@@ -1,0 +1,3 @@
+# Install after activating the omr25-311 environment.
+tensorflow>=2.16,<2.22
+tf2onnx>=1.16.1

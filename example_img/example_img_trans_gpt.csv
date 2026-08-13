@@ -1,0 +1,12 @@
+﻿page,staff,system,staffgroup,num_ins,ens,ins1,part1,tone1,ins2,part2,tone2,ins3,part3,tone3,ocr
+1,1,1,1,2,,flute,1,,flute,2,,,,,2 Flauti
+,2,1,1,2,,oboe,1,,oboe,2,,,,,2 Oboi
+,3,1,1,2,,clarinet,1,B flat,clarinet,2,B flat,,,,2 Clarinetti in B
+,4,1,1,2,,bassoon,1,,bassoon,2,,,,,2 Fagotti
+,5,1,1,2,,horn,1,E flat,horn,2,E flat,,,,2 Corni in Es
+,6,1,1,2,,trumpet,1,C,trumpet,2,C,,,,2 Trombe in C
+,7,1,2,2,,timpani,,C,timpani,,G,,,,Timpani in C-G
+,8,1,3,,,violin,1,,,,,,,,Violino I
+,9,1,3,,,violin,2,,,,,,,,Violino II
+,10,1,3,,,cello,,,,,,,,,Violoncello
+,11,1,3,,,bass,,,,,,,,,Contrabasso

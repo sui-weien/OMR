@@ -1,0 +1,7 @@
+# Reproducible inference environment used on macOS / Python 3.11.
+numpy==1.26.4
+opencv-python-headless==4.11.0.86
+onnxruntime==1.18.0
+torch==2.7.1
+music21==9.7.1
+scipy==1.16.0

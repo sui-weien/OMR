@@ -1,0 +1,45 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Editors and operating systems
+.DS_Store
+.vscode/
+.idea/
+
+# OMR generated outputs and caches
+primitive_output/
+musicxml_output/
+primitive_training_output/
+**/.cache/
+*.npz
+*.npy
+
+# Local datasets and temporary exports
+Xia/
+datasets/
+tmp/
+*.log
+
+# 25-omr submodule: declared in .gitmodules but its upstream repo is ~3GB
+# (far more than the ~90MB of checkpoints this project actually needs), so
+# local working copies of it are not tracked here. Run
+# `git submodule update --init` (or manually copy the checkpoint files
+# documented in README.md) to populate it.
+/25-omr/
