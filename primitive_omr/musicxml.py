@@ -7,9 +7,15 @@ key signatures, rests or time signatures.  Staff geometry and pitch are
 therefore inferred from the page image and any accidental printed directly
 next to a note, while missing musical symbols are reported in the conversion
 summary.  Accidental type classification is an unverified geometry heuristic
-(no trained model or labelled dataset backs it) and accidentals are never
-carried forward to later notes in the same measure, since barlines are not
-yet detected reliably enough to bound a measure.
+(no trained model or labelled dataset backs it), and accidentals are never
+carried forward to later notes in the same measure regardless of whether a
+real barline grid was found, since there is no accidental-persistence model
+yet either way.  Measure boundaries use a real detected barline grid
+(`detect_barlines`) only for systems where the right-hand and left-hand
+staff independently agree on the same positions; every other system falls
+back to a system-boundary-plus-accumulated-duration estimate, which silently
+misplaces boundaries wherever a rest, tie, or tuplet is present (none of
+which are detected yet).
 """
 
 from __future__ import annotations
@@ -20,6 +26,8 @@ from typing import Any
 
 import cv2
 import numpy as np
+
+from primitive_omr.detector import _continuous_runs
 
 
 @dataclass(frozen=True)
@@ -230,6 +238,122 @@ def _nearest_staff(y: float, staffs: list[StaffGeometry]) -> StaffGeometry:
     return min(staffs, key=distance)
 
 
+def _staff_barline_candidates(roi: np.ndarray, spacing: float) -> list[float]:
+    """Candidate vertical-stroke x-positions within one staff's ROI.
+
+    A barline is a thin stroke spanning the full staff height, so this
+    looks for tall, thin, mostly-unbroken vertical ink -- tolerant of a
+    small gap from an overlapping notehead or symbol, via the longest-run
+    "coverage" measure rather than requiring an unbroken column.
+    """
+    roi_height, width = roi.shape
+    kernel_height = max(7, int(round(spacing * 1.2)))
+    vertical_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, kernel_height))
+    vertical = cv2.morphologyEx(roi, cv2.MORPH_OPEN, vertical_kernel)
+    vertical_score = np.sum(vertical, axis=0).astype(np.float32)
+
+    coverage = np.zeros(width, dtype=np.float32)
+    for x in range(width):
+        longest = current = 0
+        for value in roi[:, x]:
+            if value:
+                current += 1
+                longest = max(longest, current)
+            else:
+                current = 0
+        coverage[x] = longest / max(1, roi_height)
+
+    max_score = float(np.max(vertical_score))
+    if max_score <= 0:
+        return []
+    normalized = vertical_score / max_score
+    smoothed = cv2.GaussianBlur(normalized.reshape(1, -1), (9, 1), 0).reshape(-1)
+    threshold = max(0.30, float(np.max(smoothed)) * 0.55)
+    candidate_mask = (smoothed >= threshold) & (coverage >= 0.55)
+
+    candidates: list[int] = []
+    min_distance = max(10, int(round(spacing)))
+    max_width = max(8, int(round(spacing * 1.2)))
+    for start, end in _continuous_runs(candidate_mask):
+        if end - start > max_width:
+            continue
+        run = np.arange(start, end)
+        center = int(run[np.argmax(smoothed[run])])
+        if center < 20:
+            continue
+        if candidates and abs(center - candidates[-1]) < min_distance:
+            if smoothed[center] > smoothed[candidates[-1]]:
+                candidates[-1] = center
+            continue
+        candidates.append(center)
+    return [float(c) for c in candidates]
+
+
+def detect_barlines(gray: np.ndarray, staffs: list[StaffGeometry]) -> dict[int, list[float]]:
+    """Detect real barline x-positions per system.
+
+    A candidate is only trusted if it is found independently on both
+    staves of a system (right hand and left hand) within a tolerance --
+    this rejects noteheads, stems, ledger lines, and other vertical ink
+    that only crosses one staff, at the cost of missing a real barline
+    if either staff's detection failed to find it. Systems where the two
+    staves don't agree on any position return an empty list; callers
+    should fall back to a duration-based measure estimate for those.
+    """
+    height = gray.shape[0]
+    binary = (gray < 200).astype(np.uint8)
+
+    staff_candidates: dict[int, list[float]] = {}
+    for staff in staffs:
+        spacing = staff.spacing
+        top = max(0, int(staff.lines[0] - spacing * 0.8))
+        bottom = min(height, int(staff.lines[-1] + spacing * 0.8))
+        if bottom <= top:
+            staff_candidates[staff.index] = []
+            continue
+        staff_candidates[staff.index] = _staff_barline_candidates(binary[top:bottom, :], spacing)
+
+    by_system: dict[int, list[StaffGeometry]] = {}
+    for staff in staffs:
+        by_system.setdefault(staff.system, []).append(staff)
+
+    barlines_by_system: dict[int, list[float]] = {}
+    for system_index, system_staffs in by_system.items():
+        if len(system_staffs) < 2:
+            barlines_by_system[system_index] = []
+            continue
+        staff_rh, staff_lh = sorted(system_staffs, key=lambda s: s.track)[:2]
+        xs_rh = staff_candidates.get(staff_rh.index, [])
+        xs_lh = staff_candidates.get(staff_lh.index, [])
+        tolerance = max(8.0, max(staff_rh.spacing, staff_lh.spacing) * 1.2)
+
+        matched: list[float] = []
+        used_lh: set[int] = set()
+        for x_rh in xs_rh:
+            best_index, best_distance = None, None
+            for index, x_lh in enumerate(xs_lh):
+                if index in used_lh:
+                    continue
+                distance = abs(x_rh - x_lh)
+                if distance <= tolerance and (best_distance is None or distance < best_distance):
+                    best_distance, best_index = distance, index
+            if best_index is not None:
+                matched.append((x_rh + xs_lh[best_index]) / 2.0)
+                used_lh.add(best_index)
+
+        matched.sort()
+        merge_distance = max(5.0, max(staff_rh.spacing, staff_lh.spacing) * 0.8)
+        merged: list[float] = []
+        for x in matched:
+            if merged and abs(x - merged[-1]) <= merge_distance:
+                merged[-1] = (merged[-1] + x) / 2.0
+            else:
+                merged.append(x)
+        barlines_by_system[system_index] = merged
+
+    return barlines_by_system
+
+
 def build_note_events(
     image: np.ndarray,
     detection: dict[str, Any],
@@ -382,13 +506,24 @@ def write_musicxml(
     title: str,
     beats: int = 4,
     beat_type: int = 4,
+    barlines_by_system: dict[int, list[float]] | None = None,
 ) -> None:
-    """Write events to a multi-part MusicXML score with music21."""
+    """Write events to a multi-part MusicXML score with music21.
+
+    When `barlines_by_system` has a real (RH/LH-agreed) barline list for a
+    system, that system's measures are split at those x-positions instead
+    of the duration estimate below -- a detected barline is ground truth
+    for where a measure actually ends, while the duration estimate is only
+    a guess that silently fails whenever a system contains a rest, tie, or
+    tuplet (none of which are detected yet). Systems with no confidently
+    detected barlines keep the duration-based estimate as before.
+    """
     try:
         from music21 import chord, clef, metadata, meter, note, stream
     except ImportError as exc:  # pragma: no cover - environment error path
         raise RuntimeError("music21 is required to export MusicXML") from exc
 
+    barlines_by_system = barlines_by_system or {}
     score = stream.Score(id="PrimitiveOMRScore")
     score.metadata = metadata.Metadata()
     score.metadata.title = title
@@ -412,14 +547,32 @@ def write_musicxml(
             track_events.extend(event for event in events if event.staff_index == staff.index)
         track_events.sort(key=lambda event: (staffs[event.staff_index].system, event.x))
         previous_system = None
+        system_barlines: list[float] = []
+        next_barline_index = 0
         for event in track_events:
             system = staffs[event.staff_index].system
-            if previous_system is not None and system != previous_system and len(measure.notes) > 0:
-                part.append(measure)
-                measure_number += 1
-                measure = stream.Measure(number=measure_number)
-                elapsed = 0.0
-            if elapsed > 0 and elapsed + event.quarter_length > measure_capacity + 1e-6:
+            if system != previous_system:
+                if previous_system is not None and len(measure.notes) > 0:
+                    part.append(measure)
+                    measure_number += 1
+                    measure = stream.Measure(number=measure_number)
+                    elapsed = 0.0
+                system_barlines = barlines_by_system.get(system, [])
+                next_barline_index = 0
+            if system_barlines:
+                crossed = False
+                while (
+                    next_barline_index < len(system_barlines)
+                    and event.x > system_barlines[next_barline_index]
+                ):
+                    next_barline_index += 1
+                    crossed = True
+                if crossed and len(measure.notes) > 0:
+                    part.append(measure)
+                    measure_number += 1
+                    measure = stream.Measure(number=measure_number)
+                    elapsed = 0.0
+            elif elapsed > 0 and elapsed + event.quarter_length > measure_capacity + 1e-6:
                 part.append(measure)
                 measure_number += 1
                 measure = stream.Measure(number=measure_number)
@@ -433,7 +586,7 @@ def write_musicxml(
             measure.append(element)
             elapsed += event.quarter_length
             previous_system = system
-            if elapsed >= measure_capacity - 1e-6:
+            if not system_barlines and elapsed >= measure_capacity - 1e-6:
                 part.append(measure)
                 measure_number += 1
                 measure = stream.Measure(number=measure_number)
@@ -500,10 +653,17 @@ def convert_detection_to_musicxml(
     beat_type: int = 4,
 ) -> dict[str, Any]:
     staffs = detect_staffs(image, float(detection["staff_spacing"]), staff_mode)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if image.ndim == 3 else image
+    barlines_by_system = detect_barlines(gray, staffs)
+    systems_with_barlines = sum(1 for xs in barlines_by_system.values() if xs)
+    total_systems = len({staff.system for staff in staffs})
     events, event_warnings = build_note_events(image, detection, staffs)
     if not events:
         raise ValueError("No detected noteheads could be assigned to a staff")
-    write_musicxml(events, staffs, output_path, Path(detection["source"]).stem, beats, beat_type)
+    write_musicxml(
+        events, staffs, output_path, Path(detection["source"]).stem, beats, beat_type,
+        barlines_by_system=barlines_by_system,
+    )
     annotated = draw_musicxml_overlay(image, primitive_overlay, staffs, events)
     if not cv2.imwrite(str(overlay_path), annotated):
         raise RuntimeError(f"Failed to write {overlay_path}")
@@ -513,9 +673,13 @@ def convert_detection_to_musicxml(
         "Accidental type (sharp/flat/natural) is guessed from stroke geometry with no trained model or "
         "labelled dataset behind it -- verify every altered pitch before use.",
         "A detected accidental is applied only to the note it is attached to, not carried forward to "
-        "later notes at the same staff position in the same measure (no reliable barline detection yet).",
+        "later notes at the same staff position in the same measure (no reliable barline detection yet, "
+        "even for systems with a detected barline grid).",
         "Rests, dots, ties, tuplets, voices and printed time signatures are not detected yet.",
-        "Measure boundaries are provisional: systems and accumulated duration are used instead of detected barlines.",
+        f"Measure boundaries: {systems_with_barlines}/{total_systems} systems used a real detected "
+        "barline grid (only trusted where the right-hand and left-hand staff independently agree); "
+        "the rest fall back to a system-boundary + accumulated-duration estimate, which silently "
+        "misplaces measure boundaries wherever a rest, tie, or tuplet is present (none are detected yet).",
     ]
     warnings.extend(event_warnings)
     return {
@@ -525,11 +689,14 @@ def convert_detection_to_musicxml(
         "time_signature_assumption": f"{beats}/{beat_type}",
         "staffs": [asdict(staff) for staff in staffs],
         "events": [asdict(event) for event in events],
+        "barlines_by_system": {str(k): v for k, v in barlines_by_system.items()},
         "counts": {
             "staffs": len(staffs),
             "events": len(events),
             "pitches": sum(len(event.pitches) for event in events),
             "accidentals_detected": len(detection.get("accidentals", [])),
+            "systems_with_detected_barlines": systems_with_barlines,
+            "systems_total": total_systems,
         },
         "outputs": {"musicxml": str(output_path), "overlay": str(overlay_path)},
         "warnings": warnings,
