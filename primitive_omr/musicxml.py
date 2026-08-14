@@ -238,15 +238,28 @@ def _nearest_staff(y: float, staffs: list[StaffGeometry]) -> StaffGeometry:
     return min(staffs, key=distance)
 
 
-def _staff_barline_candidates(roi: np.ndarray, spacing: float) -> list[float]:
+def _staff_barline_candidates(
+    roi: np.ndarray, spacing: float, suppress_columns: np.ndarray | None = None
+) -> list[float]:
     """Candidate vertical-stroke x-positions within one staff's ROI.
 
     A barline is a thin stroke spanning the full staff height, so this
     looks for tall, thin, mostly-unbroken vertical ink -- tolerant of a
     small gap from an overlapping notehead or symbol, via the longest-run
     "coverage" measure rather than requiring an unbroken column.
+
+    ``suppress_columns`` zeroes out known stem-ink columns first. Found via
+    a real example: in a fast passage where both hands share the same
+    rhythm, a right-hand stem and a left-hand stem naturally land at
+    almost the same x on their own staff, and each one alone is tall/thin
+    enough to look like a barline candidate -- without this, the RH/LH
+    agreement check below has nothing to tell that apart from a real
+    system-wide barline.
     """
     roi_height, width = roi.shape
+    if suppress_columns is not None:
+        roi = roi.copy()
+        roi[:, suppress_columns] = 0
     kernel_height = max(7, int(round(spacing * 1.2)))
     vertical_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, kernel_height))
     vertical = cv2.morphologyEx(roi, cv2.MORPH_OPEN, vertical_kernel)
@@ -289,7 +302,9 @@ def _staff_barline_candidates(roi: np.ndarray, spacing: float) -> list[float]:
     return [float(c) for c in candidates]
 
 
-def detect_barlines(gray: np.ndarray, staffs: list[StaffGeometry]) -> dict[int, list[float]]:
+def detect_barlines(
+    gray: np.ndarray, staffs: list[StaffGeometry], stems: list[dict[str, Any]] | None = None
+) -> dict[int, list[float]]:
     """Detect real barline x-positions per system.
 
     A candidate is only trusted if it is found independently on both
@@ -299,9 +314,19 @@ def detect_barlines(gray: np.ndarray, staffs: list[StaffGeometry]) -> dict[int, 
     if either staff's detection failed to find it. Systems where the two
     staves don't agree on any position return an empty list; callers
     should fall back to a duration-based measure estimate for those.
+
+    This RH/LH agreement check alone is not enough: in a passage where
+    both hands share the same rhythm, their stems land at almost the same
+    x independently on each staff, which agrees just as well as a real
+    barline would. ``stems`` (when supplied) lets known stem ink be
+    suppressed per staff before the candidate search, which was confirmed
+    against a real page to remove exactly this failure (see
+    `_staff_barline_candidates`'s docstring).
     """
     height = gray.shape[0]
+    width = gray.shape[1]
     binary = (gray < 200).astype(np.uint8)
+    stems = stems or []
 
     staff_candidates: dict[int, list[float]] = {}
     for staff in staffs:
@@ -311,7 +336,20 @@ def detect_barlines(gray: np.ndarray, staffs: list[StaffGeometry]) -> dict[int, 
         if bottom <= top:
             staff_candidates[staff.index] = []
             continue
-        staff_candidates[staff.index] = _staff_barline_candidates(binary[top:bottom, :], spacing)
+        suppress = np.zeros(width, dtype=bool)
+        half_width = max(1, int(round(spacing * 0.3)))
+        for stem in stems:
+            x0, y0, x1, y1 = stem["line"]
+            stem_top, stem_bottom = min(y0, y1), max(y0, y1)
+            if stem_bottom < top or stem_top > bottom:
+                continue
+            x_center = int(round((x0 + x1) / 2.0))
+            lo = max(0, x_center - half_width)
+            hi = min(width, x_center + half_width + 1)
+            suppress[lo:hi] = True
+        staff_candidates[staff.index] = _staff_barline_candidates(
+            binary[top:bottom, :], spacing, suppress
+        )
 
     by_system: dict[int, list[StaffGeometry]] = {}
     for staff in staffs:
@@ -654,7 +692,7 @@ def convert_detection_to_musicxml(
 ) -> dict[str, Any]:
     staffs = detect_staffs(image, float(detection["staff_spacing"]), staff_mode)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if image.ndim == 3 else image
-    barlines_by_system = detect_barlines(gray, staffs)
+    barlines_by_system = detect_barlines(gray, staffs, detection.get("stems"))
     systems_with_barlines = sum(1 for xs in barlines_by_system.values() if xs)
     total_systems = len({staff.system for staff in staffs})
     events, event_warnings = build_note_events(image, detection, staffs)
